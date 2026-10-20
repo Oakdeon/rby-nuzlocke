@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBY Nuzlocke Tracker - Pokémon Showdown Edition</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        showdownDark: '#0e1217',
+                        showdownPanel: '#1c232d',
+                        showdownBorder: '#2d3748',
+                        showdownAccent: '#3b82f6',
+                        showdownRed: '#ef4444'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0e1217;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d3748;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a5568;
+        }
+
+        /* Type Badges CSS */
+        .type-badge {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            text-shadow: 0px 1px 2px rgba(0,0,0,0.6);
+        }
+        .type-normal { background-color: #A8A878; }
+        .type-fire { background-color: #F08030; }
+        .type-water { background-color: #6890F0; }
+        .type-grass { background-color: #78C850; }
+        .type-electric { background-color: #F8D030; color: #000; text-shadow: none; }
+        .type-ice { background-color: #98D8D8; color: #000; text-shadow: none; }
+        .type-fighting { background-color: #C03028; }
+        .type-poison { background-color: #A040A0; }
+        .type-ground { background-color: #E0C068; color: #000; text-shadow: none; }
+        .type-flying { background-color: #A890F0; }
+        .type-psychic { background-color: #F85888; }
+        .type-bug { background-color: #A8B820; }
+        .type-rock { background-color: #B8A038; }
+        .type-ghost { background-color: #705898; }
+        .type-dragon { background-color: #7038F8; }
+
+        /* Animated Sprite Display */
+        .sprite-animated {
+            image-rendering: pixelated;
+            max-height: 68px;
+            max-width: 68px;
+            object-fit: contain;
+            filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.4));
+        }
+
+        .sprite-animated-lg {
+            image-rendering: pixelated;
+            max-height: 84px;
+            max-width: 84px;
+            object-fit: contain;
+            filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.5));
+        }
+
+        .sprite-graveyard {
+            filter: grayscale(100%) opacity(70%) drop-shadow(0px 2px 4px rgba(239, 68, 68, 0.3));
+        }
+
+        /* Subtle pulse for active team cards */
+        .team-slot-active {
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-[#0e1217] text-slate-100 min-h-screen flex flex-col font-sans antialiased pb-12 selection:bg-blue-500 selection:text-white">
+
+    <!-- Sticky Header & Active Team Bar -->
+    <header class="sticky top-0 z-40 bg-[#161b22]/95 backdrop-blur border-b border-slate-800 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-3 py-2 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-2">
+                
+                <!-- Title & Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-br from-red-600 to-red-800 text-white p-2.5 rounded-xl font-bold flex items-center justify-center shadow-lg shadow-red-900/30 ring-1 ring-red-500/50">
+                        <i class="fa-solid fa-skull-crossbones text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                            RBY Nuzlocke Tracker
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-900/60 text-blue-300 border border-blue-700/60 uppercase tracking-wide">
+                                Showdown Edition
+                            </span>
+                        </h1>
+                        <p class="text-xs text-slate-400">Gen 1 Kanto Live Companion with Animated Sprites</p>
+                    </div>
+                </div>
+
+                <!-- Live Counters -->
+                <div class="grid grid-cols-4 gap-2 text-center text-xs font-semibold">
+                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg p-1.5 min-w-[70px]">
+                        <span class="block text-slate-400 text-[9px] uppercase tracking-wider">Party</span>
+                        <span id="stat-team" class="text-blue-400 font-black text-sm">0/6</span>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg p-1.5 min-w-[70px]">
+                        <span class="block text-slate-400 text-[9px] uppercase tracking-wider">Alive</span>
+                        <span id="stat-alive" class="text-emerald-400 font-black text-sm">151</span>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg p-1.5 min-w-[70px]">
+                        <span class="block text-slate-400 text-[9px] uppercase tracking-wider">Dead</span>
+                        <span id="stat-dead" class="text-red-400 font-black text-sm">0</span>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700/60 rounded-lg p-1.5 min-w-[70px]">
+                        <span class="block text-slate-400 text-[9px] uppercase tracking-wider">Boxed</span>
+                        <span id="stat-boxed" class="text-purple-400 font-black text-sm">151</span>
+                    </div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="flex items-center gap-2">
+                    <button onclick="openShowdownModal()" class="flex-1 lg:flex-initial bg-blue-600 hover:bg-blue-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-95">
+                        <i class="fa-solid fa-file-code"></i> Showdown Text
+                    </button>
+                    <button onclick="confirmReset()" title="Reset Tracker" class="bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white p-2 rounded-lg border border-slate-700 hover:border-red-500 transition text-xs active:scale-95">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sticky Active Party Slot Grid -->
+            <div class="bg-[#11161d] rounded-xl p-2.5 border border-slate-800 shadow-inner">
+                <div class="flex items-center justify-between mb-1.5 px-1">
+                    <span class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-blue-400"></i> Active Party (Battle Ready)
+                    </span>
+                    <span class="text-[10px] text-slate-400 hidden sm:inline">Click <span class="text-red-400 font-bold">KO</span> when a Pokémon faints in battle</span>
+                </div>
+                <div id="active-team-slots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                    <!-- Dynamic Team Slots Injected Here -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-6 flex-grow w-full">
+        
+        <!-- Tab Selectors -->
+        <div class="flex border-b border-slate-800 mb-6 gap-2">
+            <button id="tab-pokedex-btn" onclick="switchTab('pokedex')" class="px-5 py-3 font-bold text-xs sm:text-sm rounded-t-xl bg-[#1c232d] text-blue-400 border-t border-x border-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-border-all"></i> Gen 1 Pokédex & Box
+            </button>
+            <button id="tab-graveyard-btn" onclick="switchTab('graveyard')" class="px-5 py-3 font-bold text-xs sm:text-sm rounded-t-xl text-slate-400 hover:text-slate-200 flex items-center gap-2 transition">
+                <i class="fa-solid fa-tombstone text-red-500"></i> Graveyard / Memorial 
+                <span id="graveyard-badge" class="bg-red-900/80 text-red-200 text-[10px] px-2 py-0.5 rounded-full font-black border border-red-700/60">0</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: POKEDEX & BOX -->
+        <div id="tab-pokedex" class="space-y-4">
+            <!-- Search & Filters Container -->
+            <div class="bg-[#1c232d] rounded-xl p-4 border border-slate-800 shadow-md space-y-3">
+                <div class="flex flex-col md:flex-row gap-3">
+                    
+                    <!-- Text Search -->
+                    <div class="relative flex-grow">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="search-input" oninput="applyFilters()" placeholder="Search Pokémon by English name or Dex number (#025, Pikachu...)" 
+                            class="w-full pl-9 pr-4 py-2 bg-[#0e1217] border border-slate-700/80 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                    </div>
+                    
+                    <!-- Status Filter Buttons -->
+                    <div class="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 text-xs font-bold">
+                        <button onclick="setStatusFilter('ALL')" id="filter-status-ALL" class="filter-status-btn bg-blue-600 text-white px-3 py-2 rounded-lg transition whitespace-nowrap">All</button>
+                        <button onclick="setStatusFilter('TEAM')" id="filter-status-TEAM" class="filter-status-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-lg transition whitespace-nowrap">Active Team</button>
+                        <button onclick="setStatusFilter('BOX')" id="filter-status-BOX" class="filter-status-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-lg transition whitespace-nowrap">Boxed</button>
+                        <button onclick="setStatusFilter('DEAD')" id="filter-status-DEAD" class="filter-status-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-lg transition whitespace-nowrap text-red-400">Dead / KO</button>
+                    </div>
+                </div>
+
+                <!-- Type Filters Bar -->
+                <div class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-800" id="type-filters">
+                    <!-- Dynamic Type Filters Injected Here -->
+                </div>
+            </div>
+
+            <!-- Pokémon Cards Grid -->
+            <div id="pokemon-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                <!-- Dynamic Pokemon Cards Injected Here -->
+            </div>
+        </div>
+
+        <!-- TAB 2: GRAVEYARD VIEW -->
+        <div id="tab-graveyard" class="hidden space-y-4">
+            <div class="bg-[#1c232d] border border-red-900/40 rounded-xl p-6 text-center shadow-xl relative overflow-hidden">
+                <div class="absolute -right-8 -bottom-8 opacity-5">
+                    <i class="fa-solid fa-skull-crossbones text-9xl text-red-500"></i>
+                </div>
+                <i class="fa-solid fa-monument text-5xl text-red-500/80 mb-3"></i>
+                <h2 class="text-2xl font-black text-red-400 tracking-tight">Fallen Warriors Memorial</h2>
+                <p class="text-xs text-slate-400 max-w-md mx-auto mt-1">In memory of your lost teammates defeated during your Pokémon Showdown Nuzlocke run.</p>
+            </div>
+
+            <div id="graveyard-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Graveyard Cards Injected Here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL: Declare KO / Death Details -->
+    <div id="ko-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#1c232d] border border-red-800/80 rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-fade-in">
+            <button onclick="closeKoModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 bg-red-950/80 border border-red-700/80 rounded-xl flex-shrink-0">
+                    <i class="fa-solid fa-skull-crossbones text-2xl text-red-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-white">Record Fainted Pokémon</h3>
+                    <p id="ko-modal-pokename" class="text-xs text-red-400 font-bold"></p>
+                </div>
+            </div>
+            
+            <form id="ko-form" onsubmit="confirmKo(event)" class="space-y-4">
+                <input type="hidden" id="ko-poke-id">
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Route / Location of Defeat</label>
+                    <input type="text" id="ko-location" placeholder="e.g. Cerulean Gym, Route 9, Silph Co..." class="w-full px-3 py-2 bg-[#0e1217] border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Fatal Move / Opponent / Cause</label>
+                    <input type="text" id="ko-cause" placeholder="e.g. Rival's Alakazam Psychic (Critical Hit)..." class="w-full px-3 py-2 bg-[#0e1217] border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Level at Death</label>
+                    <input type="number" id="ko-level" min="1" max="100" class="w-full px-3 py-2 bg-[#0e1217] border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeKoModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition">Cancel</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-red-600/30">Confirm KO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Showdown Import / Export -->
+    <div id="showdown-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#1c232d] border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative">
+            <button onclick="closeShowdownModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="flex items-center gap-3 mb-3">
+                <div class="p-2.5 bg-blue-900/40 border border-blue-700/60 rounded-xl">
+                    <i class="fa-solid fa-file-export text-xl text-blue-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-white">Showdown Import / Export</h3>
+                    <p class="text-xs text-slate-400">Copy or paste standard Pokémon Showdown team formats</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <textarea id="showdown-text" rows="8" placeholder="Paste Showdown format here...&#10;&#10;Tauros @ Leftovers&#10;Level: 50&#10;- Body Slam&#10;- Earthquake&#10;- Blizzard&#10;- Hyper Beam" 
+                        class="w-full p-3 bg-[#0e1217] border border-slate-700 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 justify-between">
+                    <button onclick="exportActiveTeamToShowdown()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                        <i class="fa-solid fa-copy"></i> Export Party Text
+                    </button>
+                    <button onclick="importShowdownText()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-md flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-import"></i> Import to Active Party
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Official Showdown Animated Sprite Repository base URLs
+        const SHOWDOWN_ANI_BASE = "https://play.pokemonshowdown.com/sprites/ani/";
+        const SHOWDOWN_GEN5_BASE = "https://play.pokemonshowdown.com/sprites/gen5/";
+        const SHOWDOWN_STATIC_BASE = "https://play.pokemonshowdown.com/sprites/dex/";
+
+        // Standard Gen 1 (151 Pokémon) Pokédex Data
+        const RBY_POKEMON_DATA = [
+            { id: 1, name: "Bulbasaur", showdownId: "bulbasaur", types: ["grass", "poison"] },
+            { id: 2, name: "Ivysaur", showdownId: "ivysaur", types: ["grass", "poison"] },
+            { id: 3, name: "Venusaur", showdownId: "venusaur", types: ["grass", "poison"] },
+            { id: 4, name: "Charmander", showdownId: "charmander", types: ["fire"] },
+            { id: 5, name: "Charmeleon", showdownId: "charmeleon", types: ["fire"] },
+            { id: 6, name: "Charizard", showdownId: "charizard", types: ["fire", "flying"] },
+            { id: 7, name: "Squirtle", showdownId: "squirtle", types: ["water"] },
+            { id: 8, name: "Wartortle", showdownId: "wartortle", types: ["water"] },
+            { id: 9, name: "Blastoise", showdownId: "blastoise", types: ["water"] },
+            { id: 10, name: "Caterpie", showdownId: "caterpie", types: ["bug"] },
+            { id: 11, name: "Metapod", showdownId: "metapod", types: ["bug"] },
+            { id: 12, name: "Butterfree", showdownId: "butterfree", types: ["bug", "flying"] },
+            { id: 13, name: "Weedle", showdownId: "weedle", types: ["bug", "poison"] },
+            { id: 14, name: "Kakuna", showdownId: "kakuna", types: ["bug", "poison"] },
+            { id: 15, name: "Beedrill", showdownId: "beedrill", types: ["bug", "poison"] },
+            { id: 16, name: "Pidgey", showdownId: "pidgey", types: ["normal", "flying"] },
+            { id: 17, name: "Pidgeotto", showdownId: "pidgeotto", types: ["normal", "flying"] },
+            { id: 18, name: "Pidgeot", showdownId: "pidgeot", types: ["normal", "flying"] },
+            { id: 19, name: "Rattata", showdownId: "rattata", types: ["normal"] },
+            { id: 20, name: "Raticate", showdownId: "raticate", types: ["normal"] },
+            { id: 21, name: "Spearow", showdownId: "spearow", types: ["normal", "flying"] },
+            { id: 22, name: "Fearow", showdownId: "fearow", types: ["normal", "flying"] },
+            { id: 23, name: "Ekans", showdownId: "ekans", types: ["poison"] },
+            { id: 24, name: "Arbok", showdownId: "arbok", types: ["poison"] },
+            { id: 25, name: "Pikachu", showdownId: "pikachu", types: ["electric"] },
+            { id: 26, name: "Raichu", showdownId: "raichu", types: ["electric"] },
+            { id: 27, name: "Sandshrew", showdownId: "sandshrew", types: ["ground"] },
+            { id: 28, name: "Sandslash", showdownId: "sandslash", types: ["ground"] },
+            { id: 29, name: "Nidoran-F", showdownId: "nidoranf", types: ["poison"] },
+            { id: 30, name: "Nidorina", showdownId: "nidorina", types: ["poison"] },
+            { id: 31, name: "Nidoqueen", showdownId: "nidoqueen", types: ["poison", "ground"] },
+            { id: 32, name: "Nidoran-M", showdownId: "nidoranm", types: ["poison"] },
+            { id: 33, name: "Nidorino", showdownId: "nidorino", types: ["poison"] },
+            { id: 34, name: "Nidoking", showdownId: "nidoking", types: ["poison", "ground"] },
+            { id: 35, name: "Clefairy", showdownId: "clefairy", types: ["normal"] },
+            { id: 36, name: "Clefable", showdownId: "clefable", types: ["normal"] },
+            { id: 37, name: "Vulpix", showdownId: "vulpix", types: ["fire"] },
+            { id: 38, name: "Ninetales", showdownId: "ninetales", types: ["fire"] },
+            { id: 39, name: "Jigglypuff", showdownId: "jigglypuff", types: ["normal"] },
+            { id: 40, name: "Wigglytuff", showdownId: "wigglytuff", types: ["normal"] },
+            { id: 41, name: "Zubat", showdownId: "zubat", types: ["poison", "flying"] },
+            { id: 42, name: "Golbat", showdownId: "golbat", types: ["poison", "flying"] },
+            { id: 43, name: "Oddish", showdownId: "oddish", types: ["grass", "poison"] },
+            { id: 44, name: "Gloom", showdownId: "gloom", types: ["grass", "poison"] },
+            { id: 45, name: "Vileplume", showdownId: "vileplume", types: ["grass", "poison"] },
+            { id: 46, name: "Paras", showdownId: "paras", types: ["bug", "grass"] },
+            { id: 47, name: "Parasect", showdownId: "parasect", types: ["bug", "grass"] },
+            { id: 48, name: "Venonat", showdownId: "venonat", types: ["bug", "poison"] },
+            { id: 49, name: "Venomoth", showdownId: "venomoth", types: ["bug", "poison"] },
+            { id: 50, name: "Diglett", showdownId: "diglett", types: ["ground"] },
+            { id: 51, name: "Dugtrio", showdownId: "dugtrio", types: ["ground"] },
+            { id: 52, name: "Meowth", showdownId: "meowth", types: ["normal"] },
+            { id: 53, name: "Persian", showdownId: "persian", types: ["normal"] },
+            { id: 54, name: "Psyduck", showdownId: "psyduck", types: ["water"] },
+            { id: 55, name: "Golduck", showdownId: "golduck", types: ["water"] },
+            { id: 56, name: "Mankey", showdownId: "mankey", types: ["fighting"] },
+            { id: 57, name: "Primeape", showdownId: "primeape", types: ["fighting"] },
+            { id: 58, name: "Growlithe", showdownId: "growlithe", types: ["fire"] },
+            { id: 59, name: "Arcanine", showdownId: "arcanine", types: ["fire"] },
+            { id: 60, name: "Poliwag", showdownId: "poliwag", types: ["water"] },
+            { id: 61, name: "Poliwhirl", showdownId: "poliwhirl", types: ["water"] },
+            { id: 62, name: "Poliwrath", showdownId: "poliwrath", types: ["water", "fighting"] },
+            { id: 63, name: "Abra", showdownId: "abra", types: ["psychic"] },
+            { id: 64, name: "Kadabra", showdownId: "kadabra", types: ["psychic"] },
+            { id: 65, name: "Alakazam", showdownId: "alakazam", types: ["psychic"] },
+            { id: 66, name: "Machop", showdownId: "machop", types: ["fighting"] },
+            { id: 67, name: "Machoke", showdownId: "machoke", types: ["fighting"] },
+            { id: 68, name: "Machamp", showdownId: "machamp", types: ["fighting"] },
+            { id: 69, name: "Bellsprout", showdownId: "bellsprout", types: ["grass", "poison"] },
+            { id: 70, name: "Weepinbell", showdownId: "weepinbell", types: ["grass", "poison"] },
+            { id: 71, name: "Victreebel", showdownId: "victreebel", types: ["grass", "poison"] },
+            { id: 72, name: "Tentacool", showdownId: "tentacool", types: ["water", "poison"] },
+            { id: 73, name: "Tentacruel", showdownId: "tentacruel", types: ["water", "poison"] },
+            { id: 74, name: "Geodude", showdownId: "geodude", types: ["rock", "ground"] },
+            { id: 75, name: "Graveler", showdownId: "graveler", types: ["rock", "ground"] },
+            { id: 76, name: "Golem", showdownId: "golem", types: ["rock", "ground"] },
+            { id: 77, name: "Ponyta", showdownId: "ponyta", types: ["fire"] },
+            { id: 78, name: "Rapidash", showdownId: "rapidash", types: ["fire"] },
+            { id: 79, name: "Slowpoke", showdownId: "slowpoke", types: ["water", "psychic"] },
+            { id: 80, name: "Slowbro", showdownId: "slowbro", types: ["water", "psychic"] },
+            { id: 81, name: "Magnemite", showdownId: "magnemite", types: ["electric"] },
+            { id: 82, name: "Magneton", showdownId: "magneton", types: ["electric"] },
+            { id: 83, name: "Farfetch'd", showdownId: "farfetchd", types: ["normal", "flying"] },
+            { id: 84, name: "Doduo", showdownId: "doduo", types: ["normal", "flying"] },
+            { id: 85, name: "Dodrio", showdownId: "dodrio", types: ["normal", "flying"] },
+            { id: 86, name: "Seel", showdownId: "seel", types: ["water"] },
+            { id: 87, name: "Dewgong", showdownId: "dewgong", types: ["water", "ice"] },
+            { id: 88, name: "Grimer", showdownId: "grimer", types: ["poison"] },
+            { id: 89, name: "Muk", showdownId: "muk", types: ["poison"] },
+            { id: 90, name: "Shellder", showdownId: "shellder", types: ["water"] },
+            { id: 91, name: "Cloyster", showdownId: "cloyster", types: ["water", "ice"] },
+            { id: 92, name: "Gastly", showdownId: "gastly", types: ["ghost", "poison"] },
+            { id: 93, name: "Haunter", showdownId: "haunter", types: ["ghost", "poison"] },
+            { id: 94, name: "Gengar", showdownId: "gengar", types: ["ghost", "poison"] },
+            { id: 95, name: "Onix", showdownId: "onix", types: ["rock", "ground"] },
+            { id: 96, name: "Drowzee", showdownId: "drowzee", types: ["psychic"] },
+            { id: 97, name: "Hypno", showdownId: "hypno", types: ["psychic"] },
+            { id: 98, name: "Krabby", showdownId: "krabby", types: ["water"] },
+            { id: 99, name: "Kingler", showdownId: "kingler", types: ["water"] },
+            { id: 100, name: "Voltorb", showdownId: "voltorb", types: ["electric"] },
+            { id: 101, name: "Electrode", showdownId: "electrode", types: ["electric"] },
+            { id: 102, name: "Exeggcute", showdownId: "exeggcute", types: ["grass", "psychic"] },
+            { id: 103, name: "Exeggutor", showdownId: "exeggutor", types: ["grass", "psychic"] },
+            { id: 104, name: "Cubone", showdownId: "cubone", types: ["ground"] },
+            { id: 105, name: "Marowak", showdownId: "marowak", types: ["ground"] },
+            { id: 106, name: "Hitmonlee", showdownId: "hitmonlee", types: ["fighting"] },
+            { id: 107, name: "Hitmonchan", showdownId: "hitmonchan", types: ["fighting"] },
+            { id: 108, name: "Lickitung", showdownId: "lickitung", types: ["normal"] },
+            { id: 109, name: "Koffing", showdownId: "koffing", types: ["poison"] },
+            { id: 110, name: "Weezing", showdownId: "weezing", types: ["poison"] },
+            { id: 111, name: "Rhyhorn", showdownId: "rhyhorn", types: ["ground", "rock"] },
+            { id: 112, name: "Rhydon", showdownId: "rhydon", types: ["ground", "rock"] },
+            { id: 113, name: "Chansey", showdownId: "chansey", types: ["normal"] },
+            { id: 114, name: "Tangela", showdownId: "tangela", types: ["grass"] },
+            { id: 115, name: "Kangaskhan", showdownId: "kangaskhan", types: ["normal"] },
+            { id: 116, name: "Horsea", showdownId: "horsea", types: ["water"] },
+            { id: 117, name: "Seadra", showdownId: "seadra", types: ["water"] },
+            { id: 118, name: "Goldeen", showdownId: "goldeen", types: ["water"] },
+            { id: 119, name: "Seaking", showdownId: "seaking", types: ["water"] },
+            { id: 120, name: "Staryu", showdownId: "staryu", types: ["water"] },
+            { id: 121, name: "Starmie", showdownId: "starmie", types: ["water", "psychic"] },
+            { id: 122, name: "Mr. Mime", showdownId: "mrmime", types: ["psychic"] },
+            { id: 123, name: "Scyther", showdownId: "scyther", types: ["bug", "flying"] },
+            { id: 124, name: "Jynx", showdownId: "jynx", types: ["ice", "psychic"] },
+            { id: 125, name: "Electabuzz", showdownId: "electabuzz", types: ["electric"] },
+            { id: 126, name: "Magmar", showdownId: "magmar", types: ["fire"] },
+            { id: 127, name: "Pinsir", showdownId: "pinsir", types: ["bug"] },
+            { id: 128, name: "Tauros", showdownId: "tauros", types: ["normal"] },
+            { id: 129, name: "Magikarp", showdownId: "magikarp", types: ["water"] },
+            { id: 130, name: "Gyarados", showdownId: "gyarados", types: ["water", "flying"] },
+            { id: 131, name: "Lapras", showdownId: "lapras", types: ["water", "ice"] },
+            { id: 132, name: "Ditto", showdownId: "ditto", types: ["normal"] },
+            { id: 133, name: "Eevee", showdownId: "eevee", types: ["normal"] },
+            { id: 134, name: "Vaporeon", showdownId: "vaporeon", types: ["water"] },
+            { id: 135, name: "Jolteon", showdownId: "jolteon", types: ["electric"] },
+            { id: 136, name: "Flareon", showdownId: "flareon", types: ["fire"] },
+            { id: 137, name: "Porygon", showdownId: "porygon", types: ["normal"] },
+            { id: 138, name: "Omanyte", showdownId: "omanyte", types: ["rock", "water"] },
+            { id: 139, name: "Omastar", showdownId: "omastar", types: ["rock", "water"] },
+            { id: 140, name: "Kabuto", showdownId: "kabuto", types: ["rock", "water"] },
+            { id: 141, name: "Kabutops", showdownId: "kabutops", types: ["rock", "water"] },
+            { id: 142, name: "Aerodactyl", showdownId: "aerodactyl", types: ["rock", "flying"] },
+            { id: 143, name: "Snorlax", showdownId: "snorlax", types: ["normal"] },
+            { id: 144, name: "Articuno", showdownId: "articuno", types: ["ice", "flying"] },
+            { id: 145, name: "Zapdos", showdownId: "zapdos", types: ["electric", "flying"] },
+            { id: 146, name: "Moltres", showdownId: "moltres", types: ["fire", "flying"] },
+            { id: 147, name: "Dratini", showdownId: "dratini", types: ["dragon"] },
+            { id: 148, name: "Dragonair", showdownId: "dragonair", types: ["dragon"] },
+            { id: 149, name: "Dragonite", showdownId: "dragonite", types: ["dragon", "flying"] },
+            { id: 150, name: "Mewtwo", showdownId: "mewtwo", types: ["psychic"] },
+            { id: 151, name: "Mew", showdownId: "mew", types: ["psychic"] }
+        ];
+
+        const ALL_TYPES = ["normal", "fire", "water", "grass", "electric", "ice", "fighting", "poison", "ground", "flying", "psychic", "bug", "rock", "ghost", "dragon"];
+
+        // State Tracker
+        let userPokemonState = {};
+        let activeStatusFilter = 'ALL';
+        let activeTypeFilter = 'ALL';
+
+        // Get Showdown Animated Sprite URL with Fallbacks
+        function getShowdownSpriteUrl(showdownId) {
+            return `${SHOWDOWN_ANI_BASE}${showdownId}.gif`;
+        }
+
+        function handleSpriteError(imgElement, showdownId) {
+            // Fallback chain: Gen5 GIF -> Static PNG -> PokeAPI PNG
+            if (!imgElement.dataset.fallbackLevel) {
+                imgElement.dataset.fallbackLevel = "1";
+                imgElement.src = `${SHOWDOWN_GEN5_BASE}${showdownId}.gif`;
+            } else if (imgElement.dataset.fallbackLevel === "1") {
+                imgElement.dataset.fallbackLevel = "2";
+                imgElement.src = `${SHOWDOWN_STATIC_BASE}${showdownId}.png`;
+            } else {
+                const pokeObj = RBY_POKEMON_DATA.find(p => p.showdownId === showdownId);
+                if (pokeObj) {
+                    imgElement.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokeObj.id}.png`;
+                }
+            }
+        }
+
+        // Initialize App State
+        function initData() {
+            const savedState = localStorage.getItem('rby_nuzlocke_showdown_state');
+            if (savedState) {
+                try {
+                    userPokemonState = JSON.parse(savedState);
+                } catch (e) {
+                    console.error("Failed to parse saved state", e);
+                    userPokemonState = {};
+                }
+            }
+
+            // Ensure all 151 Pokemon have defaults
+            RBY_POKEMON_DATA.forEach(poke => {
+                if (!userPokemonState[poke.id]) {
+                    userPokemonState[poke.id] = {
+                        status: 'BOX', // 'TEAM', 'BOX', 'DEAD'
+                        nickname: '',
+                        level: 50,
+                        deathLocation: '',
+                        deathCause: '',
+                        deathTime: null
+                    };
+                }
+            });
+
+            renderTypeFilters();
+            renderApp();
+        }
+
+        function saveState() {
+            localStorage.setItem('rby_nuzlocke_showdown_state', JSON.stringify(userPokemonState));
+            renderApp();
+        }
+
+        function renderApp() {
+            renderStats();
+            renderActiveTeam();
+            renderPokemonGrid();
+            renderGraveyard();
+        }
+
+        function renderTypeFilters() {
+            const container = document.getElementById('type-filters');
+            let html = `<button onclick="toggleTypeFilter('ALL')" id="type-btn-ALL" class="type-filter-btn px-2.5 py-1 rounded text-[10px] font-bold ${activeTypeFilter === 'ALL' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'} uppercase">All Types</button>`;
+            
+            ALL_TYPES.forEach(type => {
+                const isActive = activeTypeFilter === type;
+                html += `
+                    <button onclick="toggleTypeFilter('${type}')" id="type-btn-${type}" 
+                        class="type-filter-btn px-2.5 py-1 rounded text-[10px] font-bold type-${type} ${isActive ? 'ring-2 ring-white scale-105' : 'opacity-70 hover:opacity-100'} uppercase">
+                        ${type}
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderStats() {
+            let teamCount = 0;
+            let deadCount = 0;
+            let boxedCount = 0;
+
+            Object.values(userPokemonState).forEach(st => {
+                if (st.status === 'TEAM') teamCount++;
+                if (st.status === 'DEAD') deadCount++;
+                if (st.status === 'BOX') boxedCount++;
+            });
+
+            const aliveCount = teamCount + boxedCount;
+
+            document.getElementById('stat-team').textContent = `${teamCount}/6`;
+            document.getElementById('stat-alive').textContent = aliveCount;
+            document.getElementById('stat-dead').textContent = deadCount;
+            document.getElementById('stat-boxed').textContent = boxedCount;
+            document.getElementById('graveyard-badge').textContent = deadCount;
+        }
+
+        function renderActiveTeam() {
+            const slotsContainer = document.getElementById('active-team-slots');
+            slotsContainer.innerHTML = '';
+
+            const teamPokemon = RBY_POKEMON_DATA.filter(p => userPokemonState[p.id].status === 'TEAM');
+
+            for (let i = 0; i < 6; i++) {
+                if (i < teamPokemon.length) {
+                    const poke = teamPokemon[i];
+                    const state = userPokemonState[poke.id];
+
+                    slotsContainer.innerHTML += `
+                        <div class="bg-[#1c232d] border border-blue-500/60 rounded-xl p-2 flex flex-col justify-between relative team-slot-active group transition">
+                            <div class="flex items-center gap-2">
+                                <div class="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                    <img src="${getShowdownSpriteUrl(poke.showdownId)}" 
+                                         onerror="handleSpriteError(this, '${poke.showdownId}')" 
+                                         alt="${poke.name}" 
+                                         class="sprite-animated">
+                                </div>
+                                <div class="overflow-hidden min-w-0 flex-1">
+                                    <div class="text-xs font-bold text-white truncate">${state.nickname || poke.name}</div>
+                                    <div class="text-[10px] text-slate-400 font-semibold">Lvl ${state.level}</div>
+                                    <div class="flex gap-1 mt-0.5">
+                                        ${poke.types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center gap-1">
+                                <button onclick="removeFromTeam(${poke.id})" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-2 py-0.5 rounded transition">
+                                    To Box
+                                </button>
+                                <button onclick="openKoModal(${poke.id})" class="text-[10px] bg-red-600 hover:bg-red-500 text-white font-bold px-2 py-0.5 rounded shadow transition flex items-center gap-1">
+                                    <i class="fa-solid fa-skull"></i> KO
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Empty Slot
+                    slotsContainer.innerHTML += `
+                        <div class="bg-[#0e1217]/50 border border-dashed border-slate-700/80 rounded-xl p-2 flex flex-col items-center justify-center text-slate-600 h-20">
+                            <i class="fa-solid fa-plus text-xs mb-1 opacity-60"></i>
+                            <span class="text-[10px] font-bold">Slot ${i + 1}</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function renderPokemonGrid() {
+            const grid = document.getElementById('pokemon-grid');
+            grid.innerHTML = '';
+
+            const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+
+            const filteredList = RBY_POKEMON_DATA.filter(poke => {
+                const state = userPokemonState[poke.id];
+                
+                // Status Filter
+                if (activeStatusFilter === 'TEAM' && state.status !== 'TEAM') return false;
+                if (activeStatusFilter === 'BOX' && state.status !== 'BOX') return false;
+                if (activeStatusFilter === 'DEAD' && state.status !== 'DEAD') return false;
+
+                // Type Filter
+                if (activeTypeFilter !== 'ALL' && !poke.types.includes(activeTypeFilter)) return false;
+
+                // Search Filter
+                if (searchVal) {
+                    const idStr = `#${poke.id.toString().padStart(3, '0')}`;
+                    const matchesName = poke.name.toLowerCase().includes(searchVal);
+                    const matchesNickname = state.nickname ? state.nickname.toLowerCase().includes(searchVal) : false;
+                    const matchesId = idStr.includes(searchVal) || poke.id.toString() === searchVal;
+
+                    if (!matchesName && !matchesNickname && !matchesId) return false;
+                }
+
+                return true;
+            });
+
+            if (filteredList.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500">
+                        <i class="fa-solid fa-ghost text-4xl mb-2 opacity-50"></i>
+                        <p class="text-sm font-semibold">No Pokémon found matching your criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredList.forEach(poke => {
+                const state = userPokemonState[poke.id];
+                
+                let cardBorder = "border-slate-800 bg-[#1c232d]";
+                let badgeStatus = `<span class="bg-slate-800 text-slate-400 text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wide">Boxed</span>`;
+                
+                if (state.status === 'TEAM') {
+                    cardBorder = "border-blue-500/80 bg-blue-950/20";
+                    badgeStatus = `<span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-wide flex items-center gap-1"><i class="fa-solid fa-shield"></i> Party</span>`;
+                } else if (state.status === 'DEAD') {
+                    cardBorder = "border-red-900/60 bg-red-950/20 opacity-75";
+                    badgeStatus = `<span class="bg-red-600 text-white text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-wide flex items-center gap-1"><i class="fa-solid fa-skull"></i> KO</span>`;
+                }
+
+                grid.innerHTML += `
+                    <div class="rounded-xl p-3 border ${cardBorder} shadow-lg flex flex-col justify-between transition hover:border-slate-600">
+                        <div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] font-bold text-slate-500">#${poke.id.toString().padStart(3, '0')}</span>
+                                ${badgeStatus}
+                            </div>
+                            
+                            <div class="flex items-center gap-3 my-2">
+                                <div class="w-16 h-16 flex items-center justify-center flex-shrink-0">
+                                    <img src="${getShowdownSpriteUrl(poke.showdownId)}" 
+                                         onerror="handleSpriteError(this, '${poke.showdownId}')" 
+                                         alt="${poke.name}" 
+                                         class="${state.status === 'DEAD' ? 'sprite-animated sprite-graveyard' : 'sprite-animated'}">
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="font-black text-sm text-slate-100 truncate">${poke.name}</h4>
+                                    <div class="flex gap-1 mt-1">
+                                        ${poke.types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Editable inputs -->
+                            <div class="space-y-1.5 mt-2 pt-2 border-t border-slate-700/60">
+                                <div class="flex gap-2">
+                                    <input type="text" placeholder="Nickname..." value="${state.nickname}" onchange="updatePokeField(${poke.id}, 'nickname', this.value)" 
+                                        class="w-2/3 px-2 py-1 bg-[#0e1217] border border-slate-700 rounded text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500">
+                                    <input type="number" min="1" max="100" value="${state.level}" onchange="updatePokeField(${poke.id}, 'level', this.value)" 
+                                        class="w-1/3 px-2 py-1 bg-[#0e1217] border border-slate-700 rounded text-xs text-slate-200 focus:outline-none focus:border-blue-500 text-center font-bold">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Action Controls -->
+                        <div class="mt-3 pt-2 border-t border-slate-700/60 flex items-center justify-between gap-1">
+                            ${state.status === 'DEAD' ? `
+                                <button onclick="revivePokemon(${poke.id})" class="w-full py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-bold transition flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i> Revive
+                                </button>
+                            ` : `
+                                ${state.status === 'TEAM' ? `
+                                    <button onclick="removeFromTeam(${poke.id})" class="flex-1 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-bold transition">
+                                        To Box
+                                    </button>
+                                ` : `
+                                    <button onclick="addToTeam(${poke.id})" class="flex-1 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold transition shadow">
+                                        To Party
+                                    </button>
+                                `}
+                                <button onclick="openKoModal(${poke.id})" class="px-2.5 py-1 bg-red-600/80 hover:bg-red-600 text-white rounded text-xs font-black transition flex items-center gap-1 shadow">
+                                    <i class="fa-solid fa-skull"></i> KO
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderGraveyard() {
+            const list = document.getElementById('graveyard-list');
+            list.innerHTML = '';
+
+            const deadPokemon = RBY_POKEMON_DATA.filter(p => userPokemonState[p.id].status === 'DEAD');
+
+            if (deadPokemon.length === 0) {
+                list.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-slate-500">
+                        <i class="fa-solid fa-heart text-4xl mb-3 text-emerald-500/50"></i>
+                        <p class="text-base font-bold text-slate-300">No casualties recorded!</p>
+                        <p class="text-xs text-slate-500">Keep up the great strategy to complete your Nuzlocke deathless.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            deadPokemon.forEach(poke => {
+                const state = userPokemonState[poke.id];
+                const dateStr = state.deathTime ? new Date(state.deathTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' }) : 'Unknown Date';
+
+                list.innerHTML += `
+                    <div class="bg-[#1c232d] border border-red-900/60 rounded-xl p-4 shadow-xl flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start border-b border-slate-700/80 pb-2 mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-14 h-14 flex items-center justify-center">
+                                        <img src="${getShowdownSpriteUrl(poke.showdownId)}" 
+                                             onerror="handleSpriteError(this, '${poke.showdownId}')" 
+                                             alt="${poke.name}" 
+                                             class="sprite-animated sprite-graveyard">
+                                    </div>
+                                    <div>
+                                        <h4 class="font-black text-red-400 text-base">${state.nickname || poke.name}</h4>
+                                        <span class="text-xs text-slate-400 font-medium">${poke.name} • Level ${state.level}</span>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] text-slate-500 font-mono font-bold">${dateStr}</span>
+                            </div>
+
+                            <div class="space-y-1.5 text-xs">
+                                <div>
+                                    <span class="text-slate-500 font-bold block text-[10px] uppercase tracking-wider">Location of Defeat</span>
+                                    <span class="text-slate-200 font-medium">${state.deathLocation || 'Unspecified'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-500 font-bold block text-[10px] uppercase tracking-wider">Fatal Cause</span>
+                                    <span class="text-red-300 italic font-medium">"${state.deathCause || 'Unspecified'}"</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-2 border-t border-slate-700/60 flex justify-end">
+                            <button onclick="revivePokemon(${poke.id})" class="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Undo KO / Revive
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Actions Logic
+        function addToTeam(pokeId) {
+            const currentTeam = Object.values(userPokemonState).filter(s => s.status === 'TEAM');
+            if (currentTeam.length >= 6) {
+                alert("Your Party is full (6/6)! Move a Pokémon to the Box first.");
+                return;
+            }
+
+            userPokemonState[pokeId].status = 'TEAM';
+            saveState();
+        }
+
+        function removeFromTeam(pokeId) {
+            userPokemonState[pokeId].status = 'BOX';
+            saveState();
+        }
+
+        function revivePokemon(pokeId) {
+            userPokemonState[pokeId].status = 'BOX';
+            userPokemonState[pokeId].deathLocation = '';
+            userPokemonState[pokeId].deathCause = '';
+            userPokemonState[pokeId].deathTime = null;
+            saveState();
+        }
+
+        function updatePokeField(pokeId, field, value) {
+            userPokemonState[pokeId][field] = value;
+            saveState();
+        }
+
+        // Modal KO Handlers
+        function openKoModal(pokeId) {
+            const poke = RBY_POKEMON_DATA.find(p => p.id === pokeId);
+            const state = userPokemonState[pokeId];
+
+            document.getElementById('ko-poke-id').value = pokeId;
+            document.getElementById('ko-modal-pokename').textContent = `${state.nickname || poke.name} (#${poke.id.toString().padStart(3, '0')})`;
+            document.getElementById('ko-location').value = state.deathLocation || '';
+            document.getElementById('ko-cause').value = state.deathCause || '';
+            document.getElementById('ko-level').value = state.level || 50;
+            
+            document.getElementById('ko-modal').classList.remove('hidden');
+        }
+
+        function closeKoModal() {
+            document.getElementById('ko-modal').classList.add('hidden');
+        }
+
+        function confirmKo(e) {
+            e.preventDefault();
+            const pokeId = parseInt(document.getElementById('ko-poke-id').value);
+            const location = document.getElementById('ko-location').value;
+            const cause = document.getElementById('ko-cause').value;
+            const lvl = parseInt(document.getElementById('ko-level').value) || 50;
+
+            userPokemonState[pokeId].status = 'DEAD';
+            userPokemonState[pokeId].deathLocation = location;
+            userPokemonState[pokeId].deathCause = cause;
+            userPokemonState[pokeId].level = lvl;
+            userPokemonState[pokeId].deathTime = new Date().toISOString();
+
+            closeKoModal();
+            saveState();
+        }
+
+        // Showdown Modal Handlers
+        function openShowdownModal() {
+            document.getElementById('showdown-modal').classList.remove('hidden');
+        }
+
+        function closeShowdownModal() {
+            document.getElementById('showdown-modal').classList.add('hidden');
+        }
+
+        function exportActiveTeamToShowdown() {
+            const team = RBY_POKEMON_DATA.filter(p => userPokemonState[p.id].status === 'TEAM');
+            if (team.length === 0) {
+                alert("Your Active Party is empty!");
+                return;
+            }
+
+            let showdownString = "";
+            team.forEach(poke => {
+                const state = userPokemonState[poke.id];
+                const nameStr = state.nickname ? `${state.nickname} (${poke.name})` : poke.name;
+                
+                showdownString += `${nameStr}\n`;
+                showdownString += `Level: ${state.level}\n`;
+                showdownString += `- Body Slam\n- Earthquake\n- Blizzard\n- Hyper Beam\n\n`;
+            });
+
+            document.getElementById('showdown-text').value = showdownString.trim();
+        }
+
+        function importShowdownText() {
+            const text = document.getElementById('showdown-text').value.trim();
+            if (!text) return;
+
+            // Split into individual Pokemon blocks
+            const blocks = text.split(/\n\s*\n/);
+            let importedCount = 0;
+
+            blocks.forEach(block => {
+                const lines = block.split('\n');
+                if (lines.length === 0) return;
+
+                const firstLine = lines[0].trim();
+                let pokeName = firstLine.split('@')[0].trim();
+                let nickname = "";
+
+                // Check for nickname format: "Nickname (PokemonName)"
+                const matchNickname = pokeName.match(/(.+)\s*\((.+)\)/);
+                if (matchNickname) {
+                    nickname = matchNickname[1].trim();
+                    pokeName = matchNickname[2].trim();
+                }
+
+                // Clean name for lookup
+                const cleanName = pokeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                const poke = RBY_POKEMON_DATA.find(p => 
+                    p.showdownId === cleanName || 
+                    p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanName
+                );
+
+                if (poke) {
+                    userPokemonState[poke.id].status = 'TEAM';
+                    if (nickname) userPokemonState[poke.id].nickname = nickname;
+
+                    // Parse Level if present
+                    const levelLine = lines.find(l => l.toLowerCase().startsWith('level:'));
+                    if (levelLine) {
+                        const lvl = parseInt(levelLine.split(':')[1].trim());
+                        if (!isNaN(lvl)) userPokemonState[poke.id].level = lvl;
+                    }
+
+                    importedCount++;
+                }
+            });
+
+            if (importedCount > 0) {
+                saveState();
+                closeShowdownModal();
+                alert(`Successfully imported ${importedCount} Pokémon into your Active Party!`);
+            } else {
+                alert("Could not recognize Gen 1 Pokémon in the provided text. Please ensure standard Pokémon Showdown export format.");
+            }
+        }
+
+        // Tab and Filter Navigation
+        function switchTab(tabName) {
+            const pokedexTab = document.getElementById('tab-pokedex');
+            const graveyardTab = document.getElementById('tab-graveyard');
+            const pokedexBtn = document.getElementById('tab-pokedex-btn');
+            const graveyardBtn = document.getElementById('tab-graveyard-btn');
+
+            if (tabName === 'pokedex') {
+                pokedexTab.classList.remove('hidden');
+                graveyardTab.classList.add('hidden');
+                
+                pokedexBtn.className = "px-5 py-3 font-bold text-xs sm:text-sm rounded-t-xl bg-[#1c232d] text-blue-400 border-t border-x border-slate-700 flex items-center gap-2";
+                graveyardBtn.className = "px-5 py-3 font-bold text-xs sm:text-sm rounded-t-xl text-slate-400 hover:text-slate-200 flex items-center gap-2 transition";
+            } else {
+                pokedexTab.classList.add('hidden');
+                graveyardTab.classList.remove('hidden');
+
+                graveyardBtn.className = "px-5 py-3 font-bold text-xs sm:text-sm rounded-t-xl bg-[#1c232d] text-red-400 border-t border-x border-slate-700 flex items-center gap-2";
+                pokedexBtn.className = "px-5 py-3 font-bold text-xs sm:text-sm rounded-t-xl text-slate-400 hover:text-slate-200 flex items-center gap-2 transition";
+            }
+        }
+
+        function setStatusFilter(status) {
+            activeStatusFilter = status;
+            document.querySelectorAll('.filter-status-btn').forEach(btn => {
+                btn.className = "filter-status-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-lg transition whitespace-nowrap";
+            });
+            const activeBtn = document.getElementById(`filter-status-${status}`);
+            if (activeBtn) {
+                activeBtn.className = "filter-status-btn bg-blue-600 text-white px-3 py-2 rounded-lg transition whitespace-nowrap font-bold";
+            }
+            renderPokemonGrid();
+        }
+
+        function toggleTypeFilter(type) {
+            activeTypeFilter = type;
+            renderTypeFilters();
+            renderPokemonGrid();
+        }
+
+        function applyFilters() {
+            renderPokemonGrid();
+        }
+
+        function confirmReset() {
+            if (confirm("Are you sure you want to reset your entire Nuzlocke run? All recorded party statuses, levels, nicknames, and graveyard entries will be cleared.")) {
+                localStorage.removeItem('rby_nuzlocke_showdown_state');
+                userPokemonState = {};
+                initData();
+            }
+        }
+
+        // App Initialization
+        window.onload = function() {
+            initData();
+        };
+    </script>
+</body>
+</html>
